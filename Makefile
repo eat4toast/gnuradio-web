@@ -95,18 +95,20 @@ gnuradio: build-output/volk build-output/boost build-output/pyqt5 build-output/n
 	cp -r ./build-output/numpy/numpy-static ./.context/gnuradio/
 	cp -r ./build-output/qwt ./.context/gnuradio/
 	docker-compose build gnuradio
-	rm -rf ./build-output/gnuradio
+	mkdir -p build-output/gnuradio/wasm
+	chmod 777 build-output/gnuradio/wasm
 	docker-compose run -u 1000:1000 gnuradio cp -r /build/base/wasm /build-output/gnuradio
-	mv build-output/gnuradio/lib build-output/gnuradio/_lib
+
 
 gnuradio-rebuild: gnuradio
 	cp -r ./scratch ./.context/gnuradio-rebuild/
 	cp ./dockerfiles/gnuradio-rebuild.dockerfile ./.context/gnuradio-rebuild/dockerfile
 	cp -r ./build-output/pyqt5/pyqt5-static ./.context/gnuradio-rebuild/
 	docker-compose build gnuradio-rebuild
-	rm -rf ./build-output/gnuradio
+	mkdir -p build-output/gnuradio/wasm
+	chmod 777 build-output/gnuradio/wasm
 	docker-compose run -u 1000:1000 gnuradio-rebuild cp -r /build/base/wasm /build-output/gnuradio
-	mv build-output/gnuradio/lib build-output/gnuradio/_lib
+
 
 ./build/wasm:
 	docker-compose run -u ${UID}:${UID} pyqt5 cp -r /opt/cpython/wasm /build/
@@ -120,9 +122,11 @@ gnuradio-rebuild: gnuradio
 webapp: gnuradio-rebuild
 
 	mkdir -p ./webapp
+	mkdir -p build-output/cpython/wasm/bin/
+	chmod 777 build-output/cpython/wasm/bin
+	cd /home/nuc/sub/gnuradio-web/grc-dev && find . -name "*.py" | xargs ../build-output/cpython/wasm/bin/python3.11-i386 -m compileall
 
-	cd ~/git/gnuradio-web/grc-dev && find . -name "*.py" | xargs ../build-output/cpython/wasm/bin/python3.11-i386 -m compileall
-
+	mkdir -p grc-dev/gnuradio/
 	cp ./cache_v2.json grc-dev/gnuradio/
 
 	if [ ! -d "./build-output/gnuradio/_lib" ]; then \
@@ -139,14 +143,12 @@ webapp: gnuradio-rebuild
 	./build-output/gnuradio/_lib/* \
 	./build-output/gnuradio/lib
 
-	rm -rf ./build-output/gnuradio/lib/python3.11/test
-	rm -rf ./build-output/gnuradio/lib/python3.11/ensurepip
-	rm -rf ./build-output/gnuradio/lib/python3.11/site-packages/pip
 
+	mkdir -p build-output/gnuradio/lib/python3.11/site-packages/
 	cp -r ./grc-dev/gnuradio ./build-output/gnuradio/lib/python3.11/site-packages/
 
 	cd build-output/gnuradio && \
-	$$EMSDK/upstream/emscripten/tools/file_packager.py \
+	/home/nuc/emsdk/upstream/emscripten/tools/file_packager.py \
 	python.data --preload lib --no-node --js-output=python.data.js --lz4
 
 	cp ./build-output/gnuradio/python* ./webapp/

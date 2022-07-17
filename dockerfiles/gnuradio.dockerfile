@@ -106,9 +106,12 @@ RUN for PACKAGE in markupsafe mako six packaging; do \
 
 # grab the GNU Radio source from github
 # - branch: feature-qt-gui
-RUN git clone --branch=feature-grc-qt https://github.com/gnuradio/gnuradio.git /opt/gnuradio && \
-    cd /opt/gnuradio && git checkout 739103692cfdc4dbd74c304a0443a0e896b1112d && \
-    cd /opt/gnuradio && git submodule update --init --recursive
+#RUN git clone --branch=feature-grc-qt https://github.com/gnuradio/gnuradio.git /opt/gnuradio && \
+#    cd /opt/gnuradio && git checkout 739103692cfdc4dbd74c304a0443a0e896b1112d && \
+#    cd /opt/gnuradio && git submodule update --init --recursive
+RUN git clone --branch=feature-grc-qt --depth=1 https://github.com/gnuradio/gnuradio.git /opt/gnuradio && \
+    cd /opt/gnuradio && git submodule update --init --recursive && \
+    sed -i '14s/$/\n#include <vector>/' ./gr-blocks/include/gnuradio/blocks/blockinterleaving.h
 
 # build/install fftw3f
 RUN cd /opt && wget http://fftw.org/fftw-3.3.10.tar.gz && tar -xf fftw-3.3.10.tar.gz
@@ -116,8 +119,8 @@ RUN cd /opt/fftw-3.3.10 && \
     emconfigure ./configure --prefix=/build --host=wasm32 --with-slow-timer --enable-float && \
     emmake make -j6 install
 
-RUN     cd /opt/gnuradio && git checkout bb2f782e755fd08d03316a4cf43094c10ed7eb23 && \
-    cd /opt/gnuradio && git submodule update --init --recursive
+#RUN     cd /opt/gnuradio && git checkout bb2f782e755fd08d03316a4cf43094c10ed7eb23 && \
+#    cd /opt/gnuradio && git submodule update --init --recursive
 
 # patch GNU Radio
 ADD ./gnuradio.patch /opt/gnuradio/gnuradio.patch

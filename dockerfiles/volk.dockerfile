@@ -11,7 +11,7 @@ RUN cd /opt/volk && git submodule update --init --recursive
 # configure
 RUN mkdir -p /opt/volk/build
 RUN cd /opt/volk/build && emcmake cmake \
-    CFLAGS="${CFLAGS}" \
+    -DCFLAGS="${CFLAGS}" \
     -DCMAKE_INSTALL_PREFIX=/build/volk \
     -DPYTHON_EXECUTABLE=/opt/cpython/wasm/bin/python3.11-i386 \
     -DVOLK_CPU_FEATURES=OFF ../
